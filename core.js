@@ -209,7 +209,11 @@
 
   function testoApertura(st) {
     if (!st) return "";
-    if (st.aperto) return st.sempre ? "Aperto 24 ore su 24" : "Aperto ora · chiude alle " + hhmm(st.chiude);
+    const alle = (min) => min === 1440 ? "a mezzanotte" : "alle " + hhmm(min);
+    if (st.aperto && st.chiudeGiorni) {
+      return "Aperto ora · chiude " + (st.chiudeGiorni === 1 ? "domani" : GIORNI_IT[st.chiudeGiorno]) + " " + alle(st.chiude);
+    }
+    if (st.aperto) return st.sempre ? "Aperto 24 ore su 24" : "Aperto ora · chiude " + alle(st.chiude);
     if (!st.apre) return "Chiuso";
     const { giorni, giorno, min } = st.apre;
     const q = giorni === 0 ? "alle " : giorni === 1 ? "domani alle " : GIORNI_IT[giorno] + " alle ";
@@ -259,6 +263,161 @@
       `);out center tags;`;
   }
 
+  // ---------- Farmacia Aperta (Federfarma Lombardia) ----------
+  // Lo script di pubblicazione scarica gli orari dei prossimi 7 giorni di tutte le farmacie lombarde.
+  // Ogni farmacia diventa un record compatto: { f: codice regionale, la, lo, n, a, c, t, m (email), w,
+  // s: [codici dei servizi], o: [7 liste di fasce [inizio, fine] in minuti dalla mezzanotte, una per giorno], u: [giorni di turno] }.
+  // I giorni sono quelli di "giorni" nell'indice (date di Roma, il primo è il giorno dello scaricamento).
+
+  const minutiOra = (s) => { const m = /(\d{4}-\d{2}-\d{2}) (\d{2}):(\d{2})/.exec(s || ""); return m ? { g: m[1], min: +m[2] * 60 + +m[3] } : null; };
+  const giorniTra = (da, a) => Math.round((Date.parse(a + "T00:00:00Z") - Date.parse(da + "T00:00:00Z")) / 86400000);
+  const pulisci = (v) => { v = String(v ?? "").trim(); return v && v !== "-" ? v : ""; };
+
+  /** Fasce [inizio, fine] in minuti di una lista orari_oggi del giorno "giorno" (fine 1440 = mezzanotte). */
+  function fasceDelGiorno(orari, giorno) {
+    const out = [];
+    for (const f of orari || []) {
+      const a = minutiOra(f.inizio), b = minutiOra(f.fine);
+      if (!a || !b) continue;
+      const ini = a.min + 1440 * giorniTra(giorno, a.g), fin = b.min + 1440 * giorniTra(giorno, b.g);
+      if (fin > ini) out.push([Math.max(0, ini), Math.min(1440, fin)]);
+    }
+    return out.sort((x, y) => x[0] - y[0]);
+  }
+
+  /** Unisce le risposte dei 7 giorni (ognuna { giorno, farmacie: {codice: {...}} }) in record compatti. */
+  function compattaFarmacieFF(giornate) {
+    const giorni = giornate.map((g) => g.giorno);
+    const recs = new Map();
+    giornate.forEach(({ giorno, farmacie }, gi) => {
+      for (const x of Object.values(farmacie || {})) {
+        const la = +x.lat, lo = +x.lng;
+        if (!x.codice_regionale || !isFinite(la) || !isFinite(lo) || !la || !lo) continue;
+        let r = recs.get(x.codice_regionale);
+        if (!r) {
+          r = { f: x.codice_regionale, la: +la.toFixed(6), lo: +lo.toFixed(6) };
+          const metti = (k, v) => { v = pulisci(v); if (v) r[k] = v; };
+          metti("n", x.insegna || x.ragione_sociale);
+          metti("a", x.indirizzo);
+          metti("c", x.comune);
+          metti("t", x.telefono);
+          metti("m", x.email);
+          metti("w", x.sito_web);
+          const s = Object.keys(x.servizi || {}).filter((k) => +x.servizi[k] === 1).map(Number).sort((p, q) => p - q);
+          if (s.length) r.s = s;
+          r.o = giorni.map(() => null);   // null = giorno non scaricato
+          recs.set(x.codice_regionale, r);
+        }
+        r.o[gi] = fasceDelGiorno(x.orari_oggi, giorno);
+        if (+x.di_turno === 1) (r.u || (r.u = [])).push(gi);
+      }
+    });
+    return { giorni, farmacie: [...recs.values()] };
+  }
+
+  /**
+   * Arricchisce le farmacie OSM (k "F") con quelle di Farmacia Aperta: ogni farmacia Federfarma si abbina alla
+   * farmacia OSM più vicina entro "maxMetri" (coppie più vicine per prime, una farmacia OSM al massimo una volta).
+   * Le farmacie Federfarma senza abbinamento diventano nuovi punti. "giorni" sono le date dell'indice Federfarma.
+   */
+  function unisciFarmacie(osm, ff, giorni, maxMetri) {
+    maxMetri = maxMetri || 60;
+    if (!ff || !ff.length) return osm || [];
+    const lista = (osm || []).slice();
+    const coppie = [];
+    const dLat = maxMetri / 111320;
+    lista.forEach((d, oi) => {
+      if (d.k !== "F") return;
+      const dLon = maxMetri / (111320 * Math.cos(d.la * Math.PI / 180));
+      ff.forEach((x, fi) => {
+        if (Math.abs(x.la - d.la) > dLat || Math.abs(x.lo - d.lo) > dLon) return;
+        const m = distanza(d.la, d.lo, x.la, x.lo);
+        if (m <= maxMetri) coppie.push([m, oi, fi]);
+      });
+    });
+    coppie.sort((p, q) => p[0] - q[0]);
+    const usatiO = new Set(), usatiF = new Set();
+    const arricchisci = (d, x) => {
+      const r = { ...d, f: x.f, od: giorni && giorni[0] };
+      for (const k of ["n", "a", "c", "t", "w"]) if (!r[k] && x[k]) r[k] = x[k];
+      if (x.m) r.m = x.m;
+      if (x.s) r.s = x.s;
+      if (x.o) r.or = x.o;
+      if (x.u) r.u = x.u;
+      return r;
+    };
+    for (const [, oi, fi] of coppie) {
+      if (usatiO.has(oi) || usatiF.has(fi)) continue;
+      usatiO.add(oi); usatiF.add(fi);
+      lista[oi] = arricchisci(lista[oi], ff[fi]);
+    }
+    ff.forEach((x, fi) => {
+      if (usatiF.has(fi)) return;
+      const { f, la, lo } = x;
+      lista.push(arricchisci({ i: "f" + f, k: "F", la, lo }, x));
+    });
+    return lista;
+  }
+
+  // Data locale "AAAA-MM-GG" (il telefono è in Italia: ora di Roma)
+  const dataLocale = (d) => d.getFullYear() + "-" + String(d.getMonth() + 1).padStart(2, "0") + "-" + String(d.getDate()).padStart(2, "0");
+
+  /** Indice del giorno di "quando" negli orari Federfarma del punto, o -1 se fuori dai giorni scaricati. */
+  function giornoFF(d, quando) {
+    if (!d.or || !d.od) return -1;
+    const g = giorniTra(d.od, dataLocale(quando ? new Date(quando) : new Date()));
+    return g >= 0 && g < d.or.length && d.or[g] ? g : -1;
+  }
+
+  /** Stato di apertura dagli orari Federfarma (stessa forma di statoApertura), o null se oggi non è tra i giorni scaricati. */
+  function statoAperturaFF(d, quando) {
+    const ora = quando ? new Date(quando) : new Date();
+    const g = giornoFF(d, ora);
+    if (g < 0) return null;
+    // fasce dei giorni scaricati da oggi in poi, in minuti da mezzanotte di oggi; quelle contigue si uniscono
+    const fasce = [];
+    for (let k = g; k < d.or.length && d.or[k]; k++) {
+      for (const [a, b] of d.or[k]) {
+        const ini = a + 1440 * (k - g), fin = b + 1440 * (k - g);
+        const ult = fasce[fasce.length - 1];
+        if (ult && ini <= ult[1]) ult[1] = Math.max(ult[1], fin);
+        else fasce.push([ini, fin]);
+      }
+    }
+    const min = ora.getHours() * 60 + ora.getMinutes();
+    const qui = fasce.find(([a, b]) => min >= a && min < b);
+    if (qui) {
+      if (qui[1] <= 1440) return { aperto: true, chiude: qui[1] };
+      const giorni = Math.floor((qui[1] - 1) / 1440);
+      return { aperto: true, chiude: qui[1] - 1440 * giorni, chiudeGiorni: giorni, chiudeGiorno: (giornoSettimana(ora) + giorni) % 7 };
+    }
+    const dopo = fasce.find(([a]) => a > min);
+    if (!dopo) return { aperto: false, apre: null };
+    const giorni = Math.floor(dopo[0] / 1440);
+    return { aperto: false, apre: { giorni, giorno: (giornoSettimana(ora) + giorni) % 7, min: dopo[0] % 1440 } };
+  }
+
+  /** La farmacia è di turno oggi secondo Farmacia Aperta. */
+  function diTurnoOggi(d, quando) {
+    const g = giornoFF(d, quando);
+    return g >= 0 && !!d.u && d.u.includes(g);
+  }
+
+  /** Orari Federfarma da oggi in poi, una riga per giorno ("Oggi: 8:30–12:30, 15:00–19:30"). */
+  function orariFFLeggibili(d, quando) {
+    const ora = quando ? new Date(quando) : new Date();
+    const g = giornoFF(d, ora);
+    if (g < 0) return [];
+    const righe = [];
+    for (let k = g; k < d.or.length && d.or[k]; k++) {
+      const gs = (giornoSettimana(ora) + k - g) % 7;
+      const nome = k === g ? "Oggi" : k === g + 1 ? "Domani" : GIORNI_BREVI[gs];
+      const fasce = d.or[k].map(([a, b]) => hhmm(a) + "–" + (b === 1440 ? "24:00" : hhmm(b))).join(", ");
+      righe.push(`${nome}: ${fasce || "chiusa"}${d.u && d.u.includes(k) ? " (di turno)" : ""}`);
+    }
+    return righe;
+  }
+
   // ---------- Punti vicini ----------
   function preparaPunti(lista, lat, lon, raggio, cat, quando) {
     const out = [];
@@ -269,7 +428,8 @@
       if (!nellaCategoria(d, cat)) continue;
       const dist = distanza(lat, lon, d.la, d.lo);
       if (dist > raggio) continue;
-      out.push({ ...d, distanza: dist, apertura: d.h ? statoApertura(d.h, quando) : null });
+      const apertura = (d.or && statoAperturaFF(d, quando)) || (d.h ? statoApertura(d.h, quando) : null);
+      out.push({ ...d, distanza: dist, apertura, turno: diTurnoOggi(d, quando) });
     }
     return out;
   }
@@ -304,7 +464,8 @@
   const API = {
     distanza, formattaDistanza, minutiInAuto, minutiAPiedi, TIPI, tipoDaTag, compatta, nellaCategoria,
     leggiOrari, statoApertura, testoApertura, orariLeggibili, tessereNelRaggio, nomeTessera, riquadro,
-    queryOverpass, preparaPunti, statistiche, capitalizza, titolo, indirizzo, nomeTipo, GIORNI_IT
+    queryOverpass, preparaPunti, statistiche, capitalizza, titolo, indirizzo, nomeTipo, GIORNI_IT,
+    fasceDelGiorno, compattaFarmacieFF, unisciFarmacie, statoAperturaFF, diTurnoOggi, orariFFLeggibili
   };
   if (typeof module !== "undefined" && module.exports) module.exports = API;
   else root.SL = API;

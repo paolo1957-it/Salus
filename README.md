@@ -15,7 +15,12 @@ Stesso aspetto e funzionamento di [Distributori](https://github.com/paolo1957-it
   divisi in tessere da 0,25° (circa 28 × 20 km). Per non pesare su Overpass li riscarica al massimo una volta
   ogni 20 ore; nel frattempo ricopia quelli già pubblicati.
 - La cartella `dati/` **non** sta nel repository. Se il sito non ha i dati, l'app li chiede direttamente a Overpass.
-- I turni delle farmacie non sono su OpenStreetMap; la guida dell'app lo spiega.
+- Farmacie della Lombardia: dopo i dati OSM, `aggiorna_farmacie.js` scarica da Farmacia Aperta (Federfarma Lombardia)
+  gli orari di oggi e dei 6 giorni seguenti di tutte le farmacie lombarde (7 richieste, una per giorno), con turni, servizi,
+  telefono, email e sito, e li salva in `dati/ff/` con le stesse tessere. L'app abbina ogni farmacia Federfarma alla farmacia
+  OSM più vicina entro 60 m (`unisciFarmacie` in `core.js`) e la arricchisce; quelle senza abbinamento diventano nuovi punti.
+  Lo stato aperto/chiuso usa gli orari Federfarma quando ci sono. Se Farmacia Aperta non risponde, vengono ricopiati i dati
+  già pubblicati. Fuori dalla Lombardia i turni non ci sono.
 
 ## Pubblicazione
 
@@ -28,10 +33,12 @@ Per riscaricare subito i dati: Actions → *Pubblica sito e aggiorna dati* → *
 - `core.js`: logica (tipi di punto, orari di apertura, distanze, tessere)
 - `app.js`: mappa, GPS, elenco, impostazioni
 - `config.js`: impostazioni iniziali e numero di versione
-- `aggiorna_salute.js`, `.github/workflows/pubblica.yml`: scaricamento dei dati e pubblicazione
+- `aggiorna_salute.js`, `aggiorna_farmacie.js`, `.github/workflows/pubblica.yml`: scaricamento dei dati e pubblicazione
+- `test.js`: prove della logica (`node test.js`)
 - `sw.js`, `manifest.webmanifest`, `icon.svg`: installazione come app
 
 ## Fonte dei dati
 
 © OpenStreetMap e chi contribuisce (licenza ODbL). Le informazioni sono inserite da volontari e possono
 essere incomplete o non aggiornate.
+Farmacie lombarde: orari, turni, servizi e contatti da Federfarma Lombardia – Farmacia Aperta (farmacia-aperta.eu).

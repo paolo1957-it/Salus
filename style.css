@@ -430,6 +430,12 @@ button { font: inherit; color: inherit; cursor: pointer; }
 .pop .pop-apertura.chiuso { color: var(--pieno); }
 .pop-orari { display: flex; flex-direction: column; margin: 6px 0; font-size: 16px; color: var(--testo); }
 .pop-orari b { font: 700 13px var(--font-body); color: var(--testo-2); text-transform: uppercase; letter-spacing: .04em; }
+.pop .pop-turno { display: inline-block; margin: 2px 0 6px; padding: 2px 8px; border-radius: 6px; font-weight: 700; color: #fff; background: var(--t-F); }
+.tag.turno { color: #fff; background: var(--t-F); padding: 0 6px; border-radius: 4px; }
+.mk.turno { box-shadow: 0 0 0 3px #fff, 0 0 0 6px var(--t-F); }
+.pop-servizi { margin: 6px 0; color: var(--testo); font-size: 15px; }
+.pop-servizi summary { cursor: pointer; font: 700 13px var(--font-body); color: var(--testo-2); text-transform: uppercase; letter-spacing: .04em; }
+.pop-servizi span { display: block; }
 .pop-pulsanti { display: flex; gap: 8px; margin-top: 14px; }
 .pop .pop-pulsanti .pop-vai { flex: 1; margin-top: 0; }
 .pop .pop-chiama { background: var(--libero); }

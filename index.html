@@ -13,7 +13,7 @@
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Barlow+Semi+Condensed:wght@600;700&family=Barlow:wght@400;500;600&display=swap">
   <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css">
-  <link rel="stylesheet" href="style.css?v=1">
+  <link rel="stylesheet" href="style.css?v=2">
 </head>
 <body>
   <div class="app">
@@ -155,7 +155,8 @@
         <footer class="fonti">
           Dati: © <a href="https://www.openstreetmap.org/copyright" target="_blank" rel="noopener">OpenStreetMap</a> e chi contribuisce
           (licenza ODbL). Le informazioni sono inserite da volontari e possono essere incomplete o non aggiornate:
-          per i turni delle farmacie e in caso di dubbio telefona prima. Se trovi un errore puoi correggerlo su OpenStreetMap.
+          in caso di dubbio telefona prima. Se trovi un errore puoi correggerlo su OpenStreetMap.
+          Farmacie della Lombardia: orari, turni e servizi da <a href="https://www.farmacia-aperta.eu/" target="_blank" rel="noopener">Farmacia Aperta</a> (Federfarma Lombardia).
         </footer>
         <button class="link-guida" id="btn-guida-elenco" type="button">Guida all'app →</button>
       </div>
@@ -185,9 +186,10 @@
           <h3>I segnaposto sulla mappa</h3>
           <ul class="g-lista" id="g-legenda"></ul>
           <ul class="g-lista">
-            <li><span class="g-segno"><span class="mk tipo-F aperto"><svg viewBox="0 0 24 24" width="16" height="16" aria-hidden="true"><path d="M9 3h6v6h6v6h-6v6H9v-6H3V9h6z" fill="currentColor"/></svg></span></span><div><b>Pallino verde</b>: aperto adesso, secondo gli orari su OpenStreetMap.</div></li>
+            <li><span class="g-segno"><span class="mk tipo-F aperto"><svg viewBox="0 0 24 24" width="16" height="16" aria-hidden="true"><path d="M9 3h6v6h6v6h-6v6H9v-6H3V9h6z" fill="currentColor"/></svg></span></span><div><b>Pallino verde</b>: aperto adesso, secondo gli orari su OpenStreetMap (per le farmacie lombarde, secondo Farmacia Aperta).</div></li>
             <li><span class="g-segno"><span class="mk tipo-F chiuso"><svg viewBox="0 0 24 24" width="16" height="16" aria-hidden="true"><path d="M9 3h6v6h6v6h-6v6H9v-6H3V9h6z" fill="currentColor"/></svg></span></span><div><b>Più chiaro, con pallino rosso</b>: chiuso adesso.</div></li>
             <li><span class="g-segno"><span class="mk tipo-F"><svg viewBox="0 0 24 24" width="16" height="16" aria-hidden="true"><path d="M9 3h6v6h6v6h-6v6H9v-6H3V9h6z" fill="currentColor"/></svg></span></span><div><b>Senza pallino</b>: orari non indicati, o scritti in un modo che l'app non sa leggere.</div></li>
+            <li><span class="g-segno"><span class="mk tipo-F aperto turno"><svg viewBox="0 0 24 24" width="16" height="16" aria-hidden="true"><path d="M9 3h6v6h6v6h-6v6H9v-6H3V9h6z" fill="currentColor"/></svg></span></span><div><b>Farmacia con doppio bordo</b>: di turno oggi (solo Lombardia).</div></li>
             <li><span class="g-segno"><span class="io"></span></span><div><b>Punto azzurro</b>: sei tu. Il <b>cerchio tratteggiato</b> è il raggio di ricerca.</div></li>
           </ul>
           <p>Tocca un segnaposto per aprire il <b>riquadro</b>: nome, tipo, indirizzo, orari, telefono, sito e distanza.
@@ -238,7 +240,10 @@
             <li>Tutti i punti vengono da <b>OpenStreetMap</b>, la mappa libera del mondo. Ogni giorno il sito scarica i dati aggiornati
               per tutta Italia; se non ci riesce, l'app li chiede direttamente a OpenStreetMap.</li>
             <li>Gli <b>orari</b> sono quelli inseriti dai volontari: possono mancare o non essere aggiornati. I giorni festivi non sono considerati.</li>
-            <li>I <b>turni notturni e festivi delle farmacie</b> non sono su OpenStreetMap: controlla il cartello sulla porta della farmacia o il sito del tuo Comune o della tua ASL.</li>
+            <li>Per le <b>farmacie della Lombardia</b> orari dei prossimi 7 giorni, <b>turni</b>, servizi, telefono, email e sito vengono da
+              <b>Farmacia Aperta</b> di Federfarma Lombardia, scaricati ogni giorno. Il riquadro dice <b>Farmacia di turno oggi</b> e lo stato
+              aperto/chiuso tiene conto dei turni. Le farmacie che non sono su OpenStreetMap vengono aggiunte.</li>
+            <li>Fuori dalla Lombardia i <b>turni notturni e festivi delle farmacie</b> non sono disponibili: controlla il cartello sulla porta della farmacia o il sito del tuo Comune o della tua ASL.</li>
             <li>Un <b>defibrillatore al chiuso</b> si può usare solo quando l'edificio è aperto.</li>
             <li>Se trovi un errore puoi correggerlo tu su openstreetmap.org: dal riquadro, <b>Vedi su OpenStreetMap</b>.</li>
           </ul>
@@ -261,8 +266,8 @@
   <div class="toast" id="toast" role="status" aria-live="polite" hidden></div>
 
   <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
-  <script src="config.js?v=1"></script>
-  <script src="core.js?v=1"></script>
-  <script src="app.js?v=1"></script>
+  <script src="config.js?v=2"></script>
+  <script src="core.js?v=2"></script>
+  <script src="app.js?v=2"></script>
 </body>
 </html>

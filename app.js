@@ -69,7 +69,7 @@
   const SIMBOLO = { F: CROCE, P: "P", S: "PS", O: "H", C: "A", M: "Dr", D: "Dt", A: CUORE, X: "+" };
   const icona = (cls, html) => L.divIcon({ className: "", html: `<div class="mk ${cls}">${html ?? ""}</div>`, iconSize: null });
   const LARGHI = new Set(["S", "M", "D"]);
-  const classiMarker = (d) => `tipo-${d.k}${LARGHI.has(d.k) ? " largo" : ""}${classiApertura(d)}`;
+  const classiMarker = (d) => `tipo-${d.k}${LARGHI.has(d.k) ? " largo" : ""}${classiApertura(d)}${d.turno ? " turno" : ""}`;
   const classiApertura = (d) => !d.apertura ? "" : d.apertura.aperto ? " aperto" : " chiuso";
 
   // ---------- Utilità UI ----------
@@ -164,7 +164,37 @@
     throw ultimoErrore || new Error("nessun server Overpass");
   }
 
+  // Farmacie lombarde da Farmacia Aperta (Federfarma Lombardia): orari della settimana, turni, servizi, contatti.
+  // Le scarica GitHub nella cartella dati/ff del sito; se non ci sono, l'app usa solo OpenStreetMap.
+  let indiceFF = null, indiceFFLetto = 0;
+  const tessereFF = new Map();
+  async function farmacieFF(lat, lon, raggio, forza) {
+    try {
+      if (forza || !indiceFF || Date.now() - indiceFFLetto > 30 * 60000) {
+        const nuovo = await fetchJson("dati/ff/indice.json", { cache: "no-cache" }, 10000);
+        if (!indiceFF || nuovo.aggiornato !== indiceFF.aggiornato) tessereFF.clear();
+        indiceFF = nuovo;
+        indiceFFLetto = Date.now();
+      }
+      const esistenti = new Set(indiceFF.tessere || []);
+      const nomi = SL.tessereNelRaggio(lat, lon, raggio, indiceFF.passo || 0.25).filter((t) => esistenti.has(t));
+      const mancanti = nomi.filter((t) => !tessereFF.has(t));
+      const parti = await Promise.all(mancanti.map((t) => fetchJson("dati/ff/" + t, {}, 20000)));
+      mancanti.forEach((t, i) => tessereFF.set(t, parti[i].d || []));
+      return nomi.flatMap((t) => tessereFF.get(t) || []);
+    } catch (e) {
+      indiceFFLetto = Date.now();   // non riprovare a ogni ricalcolo
+      if (!indiceFF) indiceFF = { tessere: [] };
+      return [];
+    }
+  }
+
   async function caricaPunti(lat, lon, raggio, forza) {
+    const [r, ff] = await Promise.all([caricaPuntiOsm(lat, lon, raggio, forza), farmacieFF(lat, lon, raggio, forza)]);
+    return { ...r, lista: SL.unisciFarmacie(r.lista, ff, indiceFF && indiceFF.giorni) };
+  }
+
+  async function caricaPuntiOsm(lat, lon, raggio, forza) {
     if (!senzaIndice) {
       try {
         return { lista: await dalSito(lat, lon, raggio, forza), fonte: "sito" };
@@ -256,6 +286,7 @@
     if (fonteDati === "sito" && indice && indice.aggiornato) {
       const d = new Date(indice.aggiornato);
       dati = " · dati OpenStreetMap aggiornati: " + d.toLocaleDateString("it-IT", { day: "numeric", month: "long" });
+      if (stato.tutti.some((x) => x.f)) dati += " · farmacie lombarde: Farmacia Aperta";
     } else if (fonteDati === "overpass") {
       dati = " · dati OpenStreetMap in tempo reale";
     }
@@ -272,7 +303,7 @@
 
   function passaFiltri(d) {
     if (stato.filtri.has("aperti") && !(d.apertura && d.apertura.aperto)) return false;
-    if (stato.filtri.has("orari") && !d.h) return false;
+    if (stato.filtri.has("orari") && !d.h && !d.or) return false;
     return true;
   }
 
@@ -300,12 +331,14 @@
     if (d.k === "A" && d.l) righe.push(`<p>${esc(d.l)}</p>`);
     if (d.k === "A" && d.d) righe.push('<p class="avviso">Al chiuso: utilizzabile solo quando l\'edificio è aperto</p>');
     if (d.k === "S") righe.push('<p class="avviso">In emergenza chiama il <a href="tel:112">112</a></p>');
+    if (d.turno) { righe.push('<p class="pop-turno">Farmacia di turno oggi</p>'); voce.push("Farmacia di turno oggi."); }
     if (d.apertura) {
       const t = SL.testoApertura(d.apertura);
       righe.push(`<p class="pop-apertura ${d.apertura.aperto ? "aperto" : "chiuso"}">${esc(t)}</p>`);
       voce.push(t.replace(" · ", ", ") + ".");
     }
-    const orari = SL.orariLeggibili(d.h);
+    const orariFF = SL.orariFFLeggibili(d);
+    const orari = orariFF.length ? orariFF : SL.orariLeggibili(d.h);
     if (orari.length) {
       righe.push(`<div class="pop-orari"><b>Orari</b>${orari.map((o) => `<span>${esc(o)}</span>`).join("")}</div>`);
       if (!d.apertura) righe.push('<p class="fonte">Orari scritti in un modo che l\'app non sa interpretare: leggili qui sopra.</p>');
@@ -313,10 +346,15 @@
     if (d.o) righe.push(`<p>Gestito da ${esc(d.o)}</p>`);
     const tel = telefoni(d.t);
     if (tel.length) righe.push(`<p>Tel. ${tel.map((n) => `<a href="tel:${attr(n.replace(/[^\d+]/g, ""))}">${esc(n)}</a>`).join(" · ")}</p>`);
+    if (d.m) righe.push(`<p><a href="mailto:${attr(d.m)}">${esc(d.m)}</a></p>`);
     if (d.w) righe.push(`<p><a href="${attr(sitoWeb(d.w))}" target="_blank" rel="noopener">Sito web</a></p>`);
+    const servizi = (d.s || []).map((c) => indiceFF && indiceFF.servizi && indiceFF.servizi[c]).filter(Boolean);
+    if (servizi.length) righe.push(`<details class="pop-servizi"><summary>Servizi (${servizi.length})</summary>${servizi.map((x) => `<span>${esc(x)}</span>`).join("")}</details>`);
     righe.push(`<p>${SL.formattaDistanza(d.distanza)} · ${d.distanza < 2500 ? "circa " + SL.minutiAPiedi(d.distanza) + " min a piedi" : "circa " + SL.minutiInAuto(d.distanza) + " min in auto"}</p>`);
     voce.push(distanzaParlata(d.distanza) + ".");
-    righe.push(`<p class="fonte">Fonte: OpenStreetMap · <a href="${attr(linkOsm(d))}" target="_blank" rel="noopener">Vedi su OpenStreetMap</a></p>`);
+    const ff = '<a href="https://www.farmacia-aperta.eu/" target="_blank" rel="noopener">Federfarma Lombardia – Farmacia Aperta</a>';
+    if (d.i[0] === "f") righe.push(`<p class="fonte">Fonte: ${ff}</p>`);
+    else righe.push(`<p class="fonte">Fonte: OpenStreetMap${d.f ? " e " + ff : ""} · <a href="${attr(linkOsm(d))}" target="_blank" rel="noopener">Vedi su OpenStreetMap</a></p>`);
     const pulsanti = [`<a class="pop-vai" href="${linkNavigazione(d.la, d.lo)}" target="_blank" rel="noopener">Portami qui</a>`];
     if (tel.length) pulsanti.push(`<a class="pop-vai pop-chiama" href="tel:${attr(tel[0].replace(/[^\d+]/g, ""))}">Chiama</a>`);
     return `<div class="pop" data-voce="${attr(voce.join(" "))}"><h3>${esc(tit)}</h3>${righe.join("")}
@@ -350,7 +388,7 @@
     const daMostrare = stato.vicini.slice().sort((a, b) => a.distanza - b.distanza).slice(0, cfg.maxSegnaposto || 1500);
     for (const d of daMostrare) {
       const cls = classiMarker(d);
-      const z = (PESO[d.k] || 0) + (d.apertura && !d.apertura.aperto ? -100 : 0);
+      const z = (PESO[d.k] || 0) + (d.apertura && !d.apertura.aperto ? -100 : 0) + (d.turno ? 50 : 0);
       const m = L.marker([d.la, d.lo], { icon: icona(cls, SIMBOLO[d.k]), title: SL.titolo(d), zIndexOffset: z })
         .bindPopup(() => popupPunto(d), OPZ_POPUP).addTo(livelli.punti);
       markerPerId.set(d.i, m);
@@ -379,6 +417,7 @@
     if (SL.titolo(d) !== SL.nomeTipo(d)) meta.push(`<span>${esc(SL.nomeTipo(d))}</span>`);
     const ind = SL.indirizzo(d) || (d.k === "A" ? d.l : "");
     if (ind) meta.push(`<span>${esc(ind)}</span>`);
+    if (d.turno) meta.push('<span class="tag turno">Di turno oggi</span>');
     if (d.apertura) meta.push(`<span class="tag ${d.apertura.aperto ? "aperto" : "chiuso"}">${esc(SL.testoApertura(d.apertura))}</span>`);
     li.innerHTML = `
       <div class="icona-tipo"><span class="mk ${classiMarker(d)}">${SIMBOLO[d.k]}</span></div>
