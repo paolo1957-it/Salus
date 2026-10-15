@@ -1,7 +1,7 @@
 // Salus – service worker: rende l'app installabile e apribile offline.
 // Cambia il nome della cache a ogni aggiornamento: così l'iPhone capisce che c'è una versione nuova.
-const CACHE = "salus-1";
-const FILE = ["./", "index.html", "style.css", "config.js", "core.js", "app.js", "icon.svg", "manifest.webmanifest"];
+const CACHE = "salus-2";
+const FILE = ["./", "index.html", "style.css", "config.js", "core.js", "app.js", "icon.svg", "icon-192.png", "apple-touch-icon.png", "help.html", "manifest.webmanifest"];
 
 self.addEventListener("install", (e) => {
   // "reload": scarica i file dal sito, non dalla memoria del browser

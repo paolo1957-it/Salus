@@ -3,24 +3,24 @@
 <head>
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
-  <title>Salus</title>
+  <title>Qui-Salus</title>
   <meta name="description" content="Farmacie, parafarmacie, pronto soccorso, ospedali e altri servizi sanitari vicino a te, da OpenStreetMap">
   <meta name="theme-color" content="#0e5e57">
   <link rel="manifest" href="manifest.webmanifest">
   <link rel="icon" href="icon.svg" type="image/svg+xml">
-  <link rel="apple-touch-icon" href="icon.svg">
+  <link rel="apple-touch-icon" href="apple-touch-icon.png">
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Barlow+Semi+Condensed:wght@600;700&family=Barlow:wght@400;500;600&display=swap">
   <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css">
-  <link rel="stylesheet" href="style.css?v=1">
+  <link rel="stylesheet" href="style.css?v=2">
 </head>
 <body>
   <div class="app">
     <header class="topbar">
-      <div class="brand" aria-label="Salus">
+      <div class="brand" aria-label="Qui-Salus">
         <span class="p-sign" aria-hidden="true"><svg viewBox="0 0 24 24" width="20" height="20"><path d="M9 3h6v6h6v6h-6v6H9v-6H3V9h6z" fill="#fff"/></svg></span>
-        <span class="brand-name">Salus</span>
+        <span class="brand-name">Qui-Salus</span>
       </div>
       <form class="cerca" id="form-cerca" role="search">
         <label for="cerca-indirizzo" class="sr-only">Cerca un indirizzo</label>
@@ -170,7 +170,7 @@
       </header>
 
       <div class="pannello-corpo guida-corpo">
-        <p class="g-intro"><b>Salus</b> ti mostra i servizi sanitari vicino a te: farmacie, parafarmacie, pronto soccorso,
+        <p class="g-intro"><b>Qui-Salus</b> ti mostra i servizi sanitari vicino a te: farmacie, parafarmacie, pronto soccorso,
           ospedali, ambulatori, medici, dentisti, defibrillatori e altri, con gli orari quando sono noti.
           I dati vengono da OpenStreetMap, la mappa libera fatta da volontari.</p>
         <p class="g-avviso">In emergenza non cercare sulla mappa: <a href="tel:112">chiama il 112</a>.</p>
@@ -252,6 +252,7 @@
             <li>Al primo avvio consenti l'accesso alla <b>posizione</b>. Tocca la mappa una volta per abilitare suoni e voce.</li>
             <li>Con <b>Tutto</b> in città i segnaposto possono essere molti: scegli un tipo o riduci il raggio.</li>
             <li>Il numero di <b>versione</b> scritto sulla mappa ti dice se hai l'ultimo aggiornamento.</li>
+            <li>La guida si può aprire anche come pagina a sé: <a href="help.html">help.html</a>.</li>
           </ul>
         </section>
       </div>
@@ -261,8 +262,8 @@
   <div class="toast" id="toast" role="status" aria-live="polite" hidden></div>
 
   <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
-  <script src="config.js?v=1"></script>
-  <script src="core.js?v=1"></script>
-  <script src="app.js?v=1"></script>
+  <script src="config.js?v=2"></script>
+  <script src="core.js?v=2"></script>
+  <script src="app.js?v=2"></script>
 </body>
 </html>

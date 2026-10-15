@@ -1,4 +1,4 @@
-# Salus
+# Qui-Salus
 
 Web app per il telefono che mostra i servizi sanitari vicino a te presi da OpenStreetMap: farmacie,
 parafarmacie, pronto soccorso, ospedali, ambulatori e cliniche, medici, dentisti, defibrillatori (DAE)
