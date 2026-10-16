@@ -66,9 +66,9 @@
   // Simbolo dentro il segnaposto, uno per tipo
   const CROCE = '<svg viewBox="0 0 24 24" width="16" height="16" aria-hidden="true"><path d="M9 3h6v6h6v6h-6v6H9v-6H3V9h6z" fill="currentColor"/></svg>';
   const CUORE = '<svg viewBox="0 0 24 24" width="18" height="18" aria-hidden="true"><path d="M12 21s-7.5-4.6-9.3-9.4C1.4 8.2 3.6 4.5 7.2 4.5c2 0 3.6 1.1 4.8 2.7 1.2-1.6 2.8-2.7 4.8-2.7 3.6 0 5.8 3.7 4.5 7.1C19.5 16.4 12 21 12 21Z" fill="currentColor"/><path d="M12.8 7.5 9.6 12.6h2.6l-1 4.2 3.4-5.4H12l.8-3.9Z" style="fill:var(--mk-sfondo,#e85d04)"/></svg>';
-  const SIMBOLO = { F: CROCE, P: "P", S: "PS", O: "H", C: "A", M: "Dr", D: "Dt", A: CUORE, X: "+" };
+  const SIMBOLO = { F: CROCE, P: "P", S: "PS", O: "H", C: "A", M: "Dr", D: "Dt", L: "Lab", A: CUORE, X: "+" };
   const icona = (cls, html) => L.divIcon({ className: "", html: `<div class="mk ${cls}">${html ?? ""}</div>`, iconSize: null });
-  const LARGHI = new Set(["S", "M", "D"]);
+  const LARGHI = new Set(["S", "M", "D", "L"]);
   const classiMarker = (d) => `tipo-${d.k}${LARGHI.has(d.k) ? " largo" : ""}${classiApertura(d)}`;
   const classiApertura = (d) => !d.apertura ? "" : d.apertura.aperto ? " aperto" : " chiuso";
 
@@ -295,7 +295,7 @@
     const voce = [tit + "."];
     const righe = [];
     if (tit.toLowerCase() !== tipo.toLowerCase()) voce.push(tipo + ".");
-    righe.push(`<p class="pop-tipo tipo-${d.k}">${esc(tipo)}${d.x && d.k !== "X" ? " · " + esc(d.x) : ""}</p>`);
+    righe.push(`<p class="pop-tipo tipo-${d.k}">${esc(tipo)}${d.x && d.k !== "X" && d.k !== "L" ? " · " + esc(d.x) : ""}</p>`);
     if (ind) { righe.push(`<p>${esc(ind)}</p>`); voce.push(ind + "."); }
     if (d.k === "A" && d.l) righe.push(`<p>${esc(d.l)}</p>`);
     if (d.k === "A" && d.d) righe.push('<p class="avviso">Al chiuso: utilizzabile solo quando l\'edificio è aperto</p>');
@@ -330,7 +330,7 @@
   }
 
   // Ordine sulla mappa: pronto soccorso e ospedali sopra, poi farmacie, poi il resto; gli aperti sopra i chiusi
-  const PESO = { S: 900, O: 700, F: 600, A: 500, P: 400, C: 300, M: 200, D: 200, X: 100 };
+  const PESO = { S: 900, O: 700, F: 600, A: 500, P: 400, C: 300, M: 200, D: 200, L: 250, X: 100 };
 
   function render() {
     livelli.raggio.clearLayers();
@@ -569,7 +569,8 @@
       P: ": vende prodotti per la salute ma non medicinali con ricetta.",
       C: ": poliambulatori, cliniche, guardie mediche, centri medici.",
       A: ": defibrillatore automatico esterno, da usare in caso di arresto cardiaco.",
-      X: ": laboratori analisi, centri prelievi, fisioterapisti, consultori e altro."
+      L: ": laboratori di analisi cliniche e centri prelievi. Scegliendo Laboratori vedi anche gli ambulatori che fanno prelievi.",
+      X: ": fisioterapisti, consultori, centri dialisi, donazione sangue e altro."
     }[k] || "."}</div></li>`).join("");
 
   let tornaA = null;

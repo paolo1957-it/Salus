@@ -36,6 +36,7 @@
     C: { nome: "Ambulatorio o clinica", plurale: "Ambulatori e cliniche" },
     M: { nome: "Medico", plurale: "Medici" },
     D: { nome: "Dentista", plurale: "Dentisti" },
+    L: { nome: "Laboratorio analisi", plurale: "Laboratori analisi" },
     A: { nome: "Defibrillatore (DAE)", plurale: "Defibrillatori" },
     X: { nome: "Altro servizio sanitario", plurale: "Altri servizi sanitari" }
   };
@@ -58,8 +59,41 @@
     dentistry: "odontoiatria", orthodontics: "ortodonzia", physiotherapy: "fisioterapia", emergency: "emergenza",
     gastroenterology: "gastroenterologia", endocrinology: "endocrinologia", oncology: "oncologia",
     occupational: "medicina del lavoro", sports: "medicina dello sport", allergology: "allergologia",
-    biology: "analisi", blood_check: "prelievi", vaccination: "vaccinazioni", diagnostic_radiology: "radiologia"
+    biology: "analisi", blood_check: "prelievi", vaccination: "vaccinazioni", diagnostic_radiology: "radiologia",
+    clinical_pathology: "patologia clinica", clinical_biology: "analisi", clinical_chemistry: "analisi",
+    laboratory: "analisi", haematology: "ematologia", microbiology: "microbiologia"
   };
+
+  // ---------- Laboratori analisi ----------
+  // In OpenStreetMap molti laboratori non hanno healthcare=laboratory: sono segnati come ambulatorio o medico,
+  // con la specialità "biology" o "blood_check", oppure si riconoscono solo dal nome.
+  // NOME_LAB_OVERPASS è la parte di nome che si chiede a Overpass (espressione regolare POSIX, senza maiuscole);
+  // NOME_LAB e NON_LAB scartano poi i laboratori che non sono di analisi mediche (acque, alimenti, odontotecnici…).
+  const NOME_LAB_OVERPASS = "laborator[a-z]* (di )?anali|anali[sz]i (clinic|medic|chimic)|prelievi|patologia clinica|centro (di )?analisi|punto analisi";
+  const NOME_LAB = new RegExp(NOME_LAB_OVERPASS, "i");
+  const NON_LAB = /acqu|aliment|ambient|terren|suol|agrar|enolog|vin[io]\b|latte|veterinar|zooprofil|industr|metall|material|chimica industriale|odontotecn|edil|cement|asfalt|carburant|olio|olii|tessil|cuoio|calzatur|forens|alimentar|arpa\b/i;
+  const HC_LAB = new Set(["laboratory", "sample_collection", "blood_check"]);
+  const SPEC_LAB = new Set(["biology", "blood_check", "clinical_pathology", "clinical_biology", "clinical_chemistry",
+    "laboratory", "laboratory_medicine", "microbiology", "sample_collection"]);
+
+  const specialita = (t) => (t["healthcare:speciality"] || "").split(";").map((s) => s.trim().toLowerCase()).filter(Boolean);
+  const nomeDaLab = (t) => {
+    const n = [t.name, t["name:it"], t.official_name].filter(Boolean).join(" ");
+    return NOME_LAB.test(n) && !NON_LAB.test(n);
+  };
+  // poliambulatori e case della salute restano ambulatori anche se fanno prelievi
+  const POLI = /poliambulator|polispecialist|casa (della|di) (salute|comunit)|guardia medica|consultorio/i;
+
+  /** true se i tag descrivono (solo) un laboratorio analisi o un centro prelievi */
+  function eLaboratorio(t) {
+    if (HC_LAB.has(t.healthcare)) return true;
+    if (POLI.test(t.name || "")) return false;
+    const sp = specialita(t);
+    if (sp.length && sp.every((s) => SPEC_LAB.has(s))) return true;
+    return nomeDaLab(t);
+  }
+  /** true se fra le specialità c'è anche il laboratorio (es. poliambulatorio con punto prelievi) */
+  const conLaboratorio = (t) => specialita(t).some((s) => SPEC_LAB.has(s)) || nomeDaLab(t);
 
   /** Codice del tipo di punto a partire dai tag OSM, oppure null se non è un punto sanitario. */
   function tipoDaTag(t) {
@@ -74,6 +108,9 @@
       return (t.dispensing === "no" || parafarm || t.shop === "chemist") ? "P" : "F";
     }
     if (am === "dentist" || hc === "dentist") return "D";
+    const sanitario = am === "doctors" || am === "clinic" || (hc && hc !== "no");
+    // un laboratorio senza tag sanitari si riconosce dal nome solo se non è altro (negozio, ufficio di un'altra attività…)
+    if (eLaboratorio(t) && (sanitario || !(t.shop && t.shop !== "medical_supply") && t.amenity !== "school")) return "L";
     if (am === "doctors" || hc === "doctor") return "M";
     if (am === "clinic" || hc === "clinic" || hc === "centre") return "C";
     if (hc && hc !== "no") return "X";
@@ -99,10 +136,11 @@
     metti("o", t.operator);
     if (k === "X") metti("x", ALTRI[t.healthcare] || t.healthcare.replace(/_/g, " "));
     if (k === "M" || k === "C" || k === "S" || k === "O") {
-      const sp = (t["healthcare:speciality"] || "").split(";").map((s) => s.trim()).filter(Boolean)
-        .map((s) => SPECIALITA[s] || s.replace(/_/g, " "));
-      if (sp.length) p.x = sp.slice(0, 4).join(", ");
+      const sp = specialita(t).map((s) => SPECIALITA[s] || s.replace(/_/g, " "));
+      if (sp.length) p.x = [...new Set(sp)].slice(0, 4).join(", ");
+      if (conLaboratorio(t)) p.b = 1;  // ha anche un laboratorio o un punto prelievi
     }
+    if (k === "L") metti("x", t.healthcare === "sample_collection" || /prelievi/i.test(t.name || "") ? "Centro prelievi" : "");
     if (k === "S" && (t.amenity === "hospital" || t.healthcare === "hospital")) p.e = 1;  // ospedale con pronto soccorso
     if (k === "A") metti("l", t["defibrillator:location"] || t.description);
     if (k === "A" && t.indoor === "yes") p.d = 1;  // al chiuso: accessibile solo negli orari dell'edificio
@@ -113,6 +151,7 @@
   function nellaCategoria(d, cat) {
     if (!cat || cat === "tutto") return true;
     if (cat === "O") return d.k === "O" || !!d.e;
+    if (cat === "L") return d.k === "L" || !!d.b;
     return d.k === cat;
   }
 
@@ -256,6 +295,7 @@
       `nwr${f}[healthcare];` +
       `nwr${f}[emergency~"^(defibrillator|emergency_ward_entrance)$"];` +
       `nwr${f}[shop=chemist][name~"parafarm",i];` +
+      `nwr${f}[name~"${NOME_LAB_OVERPASS}",i][!healthcare][!amenity];` +
       `);out center tags;`;
   }
 
@@ -297,14 +337,14 @@
     return [capitalizza(d.a || ""), capitalizza(d.c || "")].filter((x) => x.trim()).join(", ");
   }
   function nomeTipo(d) {
-    if (d.k === "X" && d.x) return d.x.charAt(0).toUpperCase() + d.x.slice(1);
+    if ((d.k === "X" || d.k === "L") && d.x) return d.x.charAt(0).toUpperCase() + d.x.slice(1);
     return TIPI[d.k].nome;
   }
 
   const API = {
     distanza, formattaDistanza, minutiInAuto, minutiAPiedi, TIPI, tipoDaTag, compatta, nellaCategoria,
     leggiOrari, statoApertura, testoApertura, orariLeggibili, tessereNelRaggio, nomeTessera, riquadro,
-    queryOverpass, preparaPunti, statistiche, capitalizza, titolo, indirizzo, nomeTipo, GIORNI_IT
+    queryOverpass, eLaboratorio, preparaPunti, statistiche, capitalizza, titolo, indirizzo, nomeTipo, GIORNI_IT
   };
   if (typeof module !== "undefined" && module.exports) module.exports = API;
   else root.SL = API;
