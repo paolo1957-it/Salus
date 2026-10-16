@@ -1,14 +1,18 @@
-# Salus
+# Qui-Salus
 
 Web app per il telefono che mostra i servizi sanitari vicino a te presi da OpenStreetMap: farmacie,
-parafarmacie, pronto soccorso, ospedali, ambulatori e cliniche, medici, dentisti, defibrillatori (DAE)
-e altri servizi (laboratori analisi, centri prelievi, fisioterapisti, consultori…).
+parafarmacie, pronto soccorso, ospedali, ambulatori e cliniche, medici, dentisti, laboratori analisi e centri prelievi,
+defibrillatori (DAE) e altri servizi (fisioterapisti, consultori…).
 Stesso aspetto e funzionamento di [Distributori](https://github.com/paolo1957-it/Distributori).
 
 ## Come funziona
 
 - I segnaposto hanno un colore e un simbolo per tipo; un pallino verde o rosso dice se è aperto adesso,
   calcolato dagli orari (`opening_hours`) scritti su OpenStreetMap.
+- I laboratori analisi vengono riconosciuti anche quando su OpenStreetMap non hanno `healthcare=laboratory`:
+  dalla specialità (`healthcare:speciality=biology`, `blood_check`…) o dal nome ("Laboratorio analisi",
+  "Centro prelievi", "Analisi cliniche"…), scartando i laboratori di analisi di acque, alimenti e simili.
+  Scegliendo **Laboratori** si vedono anche gli ambulatori che fanno prelievi.
 - Il pulsante rosso **PS** porta al pronto soccorso più vicino, quello verde alla farmacia più vicina aperta.
 - A ogni pubblicazione GitHub esegue `aggiorna_salute.js` (workflow `.github/workflows/pubblica.yml`):
   scarica da Overpass tutti i punti sanitari d'Italia e li salva nella cartella `dati/` del sito pubblicato,

@@ -3,7 +3,7 @@
  */
 window.SALUS_CONFIG = {
   // Versione dell'app, mostrata in diagonale sulla mappa. Aumentala a ogni aggiornamento.
-  versione: "1",
+  versione: "3",
 
   // Raggio di ricerca iniziale in metri (modificabile anche dall'app)
   raggioMetri: 2000,
@@ -12,7 +12,7 @@ window.SALUS_CONFIG = {
   ricaricaDopoMetri: 300,
 
   // Cosa mostrare all'inizio: "tutto" oppure F farmacie, P parafarmacie, S pronto soccorso, O ospedali,
-  // C ambulatori, M medici, D dentisti, A defibrillatori, X altro
+  // C ambulatori, M medici, D dentisti, L laboratori analisi, A defibrillatori, X altro
   categoria: "tutto",
 
   // Massimo di segnaposto sulla mappa (i più vicini): oltre, la mappa diventa lenta sul telefono
