@@ -35,6 +35,10 @@ Per riscaricare subito i dati: Actions → *Pubblica sito e aggiorna dati* → *
 - `aggiorna_salute.js`, `.github/workflows/pubblica.yml`: scaricamento dei dati e pubblicazione
 - `sw.js`, `manifest.webmanifest`, `icon.svg`: installazione come app
 
+## Statistiche d'uso
+
+Statistiche anonime, senza cookie, con GoatCounter: https://salus.goatcounter.com
+
 ## Fonte dei dati
 
 © OpenStreetMap e chi contribuisce (licenza ODbL). Le informazioni sono inserite da volontari e possono

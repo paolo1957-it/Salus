@@ -13,7 +13,7 @@
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Barlow+Semi+Condensed:wght@600;700&family=Barlow:wght@400;500;600&display=swap">
   <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css">
-  <link rel="stylesheet" href="style.css?v=3">
+  <link rel="stylesheet" href="style.css?v=4">
 </head>
 <body>
   <div class="app">
@@ -71,15 +71,6 @@
         </button>
       </div>
 
-      <div class="fab-sx">
-        <button class="fab" id="btn-guida" type="button" title="Guida all'app" aria-label="Apri la guida all'app" aria-controls="guida" aria-expanded="false">
-          <svg viewBox="0 0 24 24" width="22" height="22" aria-hidden="true"><path d="M9.2 9a2.9 2.9 0 1 1 4.1 2.6c-.8.4-1.3 1.1-1.3 2v.6" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round"/><circle cx="12" cy="17.6" r="1.3" fill="currentColor"/></svg>
-        </button>
-        <button class="fab fab-occhio" id="occhio" type="button" hidden title="Schermo sempre acceso" aria-label="Schermo sempre acceso: AUTO-REFRESH attivo">
-          <svg viewBox="0 0 24 24" width="22" height="22" aria-hidden="true"><path d="M2 12s3.6-6.5 10-6.5S22 12 22 12s-3.6 6.5-10 6.5S2 12 2 12Z" fill="none" stroke="currentColor" stroke-width="2" stroke-linejoin="round"/><circle cx="12" cy="12" r="3.2" fill="currentColor"/></svg>
-        </button>
-      </div>
-
       <div class="fab-azioni">
         <button class="fab fab-rosso" id="btn-ps" type="button" title="Il pronto soccorso più vicino" aria-label="Mostra il pronto soccorso più vicino">
           <span class="sigla" aria-hidden="true">PS</span>
@@ -93,6 +84,7 @@
     <section class="pannello" id="pannello" aria-label="Servizi sanitari vicini" hidden>
       <header class="pannello-testa">
         <h2>Vicino a te</h2>
+        <button class="btn-help" id="btn-guida" type="button" aria-label="Apri la guida all'app" aria-controls="guida" aria-expanded="false">HELP</button>
         <button class="chiudi" id="btn-chiudi" type="button" aria-label="Chiudi l'elenco e torna alla mappa">
           <svg viewBox="0 0 24 24" width="22" height="22" aria-hidden="true"><path d="M6 6l12 12M18 6L6 18" stroke="currentColor" stroke-width="2.2" stroke-linecap="round"/></svg>
         </button>
@@ -158,7 +150,6 @@
           (licenza ODbL). Le informazioni sono inserite da volontari e possono essere incomplete o non aggiornate:
           per i turni delle farmacie e in caso di dubbio telefona prima. Se trovi un errore puoi correggerlo su OpenStreetMap.
         </footer>
-        <button class="link-guida" id="btn-guida-elenco" type="button">Guida all'app →</button>
       </div>
     </section>
 
@@ -205,8 +196,7 @@
             <li><span class="g-segno"><span class="g-fab"><svg viewBox="0 0 24 24" width="20" height="20" aria-hidden="true"><circle cx="12" cy="12" r="4" fill="currentColor"/><path d="M12 2v3M12 19v3M2 12h3M19 12h3" stroke="currentColor" stroke-width="2" stroke-linecap="round"/><circle cx="12" cy="12" r="7.5" fill="none" stroke="currentColor" stroke-width="2"/></svg></span></span><div><b>Posizione</b>: riporta la mappa su di te e la fa seguire mentre ti sposti.</div></li>
             <li><span class="g-segno"><span class="g-fab nero"><svg viewBox="0 0 24 24" width="20" height="20" aria-hidden="true"><path d="M9 6h11M9 12h11M9 18h11" stroke="currentColor" stroke-width="2.2" stroke-linecap="round"/><circle cx="4.5" cy="6" r="1.6" fill="currentColor"/><circle cx="4.5" cy="12" r="1.6" fill="currentColor"/><circle cx="4.5" cy="18" r="1.6" fill="currentColor"/></svg></span></span><div><b>Elenco</b>: apre la pagina con tutti i punti vicini e le impostazioni.</div></li>
             <li><span class="g-segno"><span class="g-fab"><svg viewBox="0 0 24 24" width="20" height="20" aria-hidden="true"><path d="M20 12a8 8 0 1 1-2.34-5.66M20 4v5h-5" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg></span></span><div><b>Aggiorna</b>: ricarica subito i dati e ricalcola chi è aperto.</div></li>
-            <li><span class="g-segno"><span class="g-fab occhio"><svg viewBox="0 0 24 24" width="20" height="20" aria-hidden="true"><path d="M2 12s3.6-6.5 10-6.5S22 12 22 12s-3.6 6.5-10 6.5S2 12 2 12Z" fill="none" stroke="currentColor" stroke-width="2" stroke-linejoin="round"/><circle cx="12" cy="12" r="3.2" fill="currentColor"/></svg></span></span><div><b>Occhio verde</b> (sotto il ?): lo schermo resta sempre acceso perché l'AUTO-REFRESH è attivo. Sparisce con AUTO-REFRESH a 0.</div></li>
-            <li><span class="g-segno"><span class="g-fab"><svg viewBox="0 0 24 24" width="22" height="22" aria-hidden="true"><path d="M9.2 9a2.9 2.9 0 1 1 4.1 2.6c-.8.4-1.3 1.1-1.3 2v.6" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round"/><circle cx="12" cy="17.6" r="1.3" fill="currentColor"/></svg></span></span><div><b>Guida</b> (in alto a sinistra sulla mappa): apre questa pagina.</div></li>
+            <li><span class="g-segno"><span class="btn-help g-help">HELP</span></span><div><b>HELP</b> (in alto nella pagina Elenco, accanto alla X): apre questa pagina.</div></li>
             <li><span class="g-segno"><span class="g-fab rosso"><b style="font:700 18px/1 var(--font-display)">PS</b></span></span><div><b>Pronto soccorso</b>: porta la mappa sul pronto soccorso più vicino entro il raggio, qualunque cosa tu stia guardando.</div></li>
             <li><span class="g-segno"><span class="g-fab verde"><svg viewBox="0 0 24 24" width="20" height="20" aria-hidden="true"><path d="M9 3h6v6h6v6h-6v6H9v-6H3V9h6z" fill="currentColor"/></svg></span></span><div><b>Farmacia</b>: porta la mappa sulla farmacia più vicina aperta adesso; se nessuna risulta aperta, sulla più vicina.</div></li>
           </ul>
@@ -219,9 +209,9 @@
           <dl class="g-def">
             <dt>AUTO-REFRESH</dt>
             <dd>Ogni 30, 60 o 120 secondi l'app torna sulla tua posizione e ricalcola i punti vicini e chi è aperto. <b>0</b> la spegne. Parte da 120.
-              Finché è attivo, il telefono non va in standby e lo schermo resta acceso (compare l'occhio verde sulla mappa).</dd>
+              Finché è attivo, il telefono non va in standby e lo schermo resta acceso.</dd>
             <dt>SUONI</dt>
-            <dd>Un <b>bing</b> quando l'aggiornamento è finito; <b>due note che scendono</b> se i dati non si possono scaricare.</dd>
+            <dd>A ogni aggiornamento l'app dice <b>"Mappa sempre attiva - Refresh"</b>; <b>due note che scendono</b> se i dati non si possono scaricare.</dd>
             <dt>MAPPA</dt>
             <dd><b>Stradale</b> mostra la cartina di OpenStreetMap; <b>Satellite</b> le foto aeree con i nomi di strade e paesi.</dd>
             <dt>LETTURA VOCALE</dt>
@@ -263,8 +253,10 @@
   <div class="toast" id="toast" role="status" aria-live="polite" hidden></div>
 
   <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
-  <script src="config.js?v=3"></script>
-  <script src="core.js?v=3"></script>
-  <script src="app.js?v=3"></script>
+  <script src="config.js?v=4"></script>
+  <script src="core.js?v=4"></script>
+  <script src="app.js?v=4"></script>
+  <!-- Statistiche d'uso anonime, senza cookie: https://salus.goatcounter.com -->
+  <script data-goatcounter="https://salus.goatcounter.com/count" async src="https://gc.zgo.at/count.js"></script>
 </body>
 </html>
