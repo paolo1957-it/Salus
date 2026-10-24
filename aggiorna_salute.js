@@ -134,6 +134,15 @@ async function recuperaDalSito(sito) {
   console.log(`  ricopiate ${indice.tessere.length} tessere`);
 }
 
+// Lascia al workflow una riga "stato;aggiornato;punti" per la notifica sull'iPhone:
+// nuovi = riscaricati, recenti = non serviva riscaricarli, ripiego = Overpass non ha risposto.
+function scriviEsito(stato) {
+  if (!process.env.ESITO) return;
+  let indice = {};
+  try { indice = JSON.parse(fs.readFileSync(path.join(CARTELLA, "indice.json"), "utf8")); } catch (e) { /* nessun indice */ }
+  fs.writeFileSync(process.env.ESITO, `${stato};${indice.aggiornato || ""};${indice.punti || ""}\n`);
+}
+
 async function main() {
   const sito = process.env.SITO;
   const forza = process.env.FORZA === "1" || process.env.FORZA === "true";
@@ -144,6 +153,7 @@ async function main() {
       if (ore < ORE_VALIDI) {
         console.log(`Dati pubblicati ${ore.toFixed(1)} ore fa: non serve riscaricarli.`);
         await recuperaDalSito(sito);
+        scriviEsito("recenti");
         return;
       }
     } catch (e) {
@@ -152,10 +162,12 @@ async function main() {
   }
   try {
     salva(await daOverpass());
+    scriviEsito("nuovi");
   } catch (e) {
     console.log(`Overpass non disponibile: ${e.message}`);
     try {
       await recuperaDalSito(sito);
+      scriviEsito("ripiego");
     } catch (e2) {
       console.log(`Nessun dato disponibile: ${e2.message}. L'app userà Overpass direttamente.`);
       process.exitCode = 1;
