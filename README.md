@@ -35,6 +35,13 @@ Per riscaricare subito i dati: Actions → *Pubblica sito e aggiorna dati* → *
 - `aggiorna_salute.js`, `.github/workflows/pubblica.yml`: scaricamento dei dati e pubblicazione
 - `sw.js`, `manifest.webmanifest`, `icon.svg`: installazione come app
 
+## Notifica sull'iPhone
+
+Alla fine di ogni giro il workflow può mandare una notifica con l'app gratuita **ntfy** (App Store):
+✅ dati riscaricati, ❌ aggiornamento fallito (anche solo lo scaricamento), ⚠️ OpenStreetMap non ha risposto e
+sono rimasti i dati vecchi. Per attivarla: Settings → Secrets and variables → Actions → *New repository secret*
+`NTFY_TOPIC` con il nome del canale, e nell'app ntfy iscriversi allo stesso canale. Senza il secret la notifica viene saltata.
+
 ## Statistiche d'uso
 
 Statistiche anonime, senza cookie, con GoatCounter: https://salus.goatcounter.com

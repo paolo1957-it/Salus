@@ -178,7 +178,15 @@ button { font: inherit; color: inherit; cursor: pointer; }
 .auto {
   display: flex; align-items: center; justify-content: space-between; gap: 12px;
   padding: 10px 12px; border-radius: 10px; background: var(--bg);
+  position: relative;
 }
+/* Occhio verde al centro della riga AUTO-REFRESH: schermo sempre acceso */
+.auto .occhio {
+  position: absolute; left: 50%; top: 50%; transform: translate(-50%, -50%);
+  display: grid; place-items: center; width: 34px; height: 34px; border-radius: 50%;
+  background: var(--libero); color: #fff; pointer-events: none;
+}
+.auto .occhio[hidden] { display: none; }
 .auto span { font: 700 15px/1 var(--font-display); letter-spacing: .06em; }
 .auto select {
   height: 36px; padding: 0 10px; border-radius: 8px; border: 1px solid var(--bordo);
