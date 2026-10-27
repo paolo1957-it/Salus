@@ -2,8 +2,8 @@
  * Salus – configurazione
  */
 window.SALUS_CONFIG = {
-  // Versione dell'app, mostrata in diagonale sulla mappa. Aumentala a ogni aggiornamento.
-  versione: "6",
+  // Versione dell'app, mostrata in fondo alla pagina Elenco. Aumentala a ogni aggiornamento.
+  versione: "7",
 
   // Raggio di ricerca iniziale in metri (modificabile anche dall'app)
   raggioMetri: 2000,
