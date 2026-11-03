@@ -3,7 +3,7 @@
 Web app per il telefono che mostra i servizi sanitari vicino a te presi da OpenStreetMap: farmacie,
 parafarmacie, pronto soccorso, ospedali, ambulatori e cliniche, medici, dentisti, laboratori analisi e centri prelievi,
 defibrillatori (DAE) e altri servizi (fisioterapisti, consultori…).
-Stesso aspetto e funzionamento di [Distributori](https://github.com/paolo1957-it/Distributori).
+Stesso aspetto e funzionamento di [Distributori](https://github.com/quivicino/Distributori).
 
 ## Come funziona
 

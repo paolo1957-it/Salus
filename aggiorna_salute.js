@@ -96,7 +96,7 @@ function salva(elementi) {
     fonte: "© OpenStreetMap contributors (ODbL)",
     licenza: "Open Database License (ODbL) 1.0",
     licenzaUrl: "https://opendatacommons.org/licenses/odbl/1-0/",
-    generatoDa: "https://github.com/paolo1957-it/Salus"
+    generatoDa: "https://github.com/quivicino/Salus"
   };
   fs.writeFileSync(path.join(CARTELLA, "indice.json"), JSON.stringify(indice, null, 1));
   console.log(`  salvate ${tessere.size} tessere, ${visti.size} punti`, conta);
